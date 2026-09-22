@@ -133,9 +133,9 @@ npx mppx validate http://127.0.0.1:4101
 npx mppx account create --network testnet
 npx mppx account fund --network testnet
 npx mppx http://127.0.0.1:4101/api/jobs \
+  --network testnet \
   --method POST \
-  --header 'content-type: application/json' \
-  --body '{"delay_seconds":8,"payload":{"check":"invoice-42"}}'
+  --json-body '{"delay_seconds":8,"payload":{"check":"invoice-42"}}'
 ```
 
 You should get the job JSON plus a receipt. Deploy the paid service, then submit the live URL to the hackathon.

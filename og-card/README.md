@@ -121,9 +121,9 @@ npx mppx validate http://127.0.0.1:4103
 npx mppx account create --network testnet
 npx mppx account fund --network testnet
 npx mppx http://127.0.0.1:4103/api/card \
+  --network testnet \
   --method POST \
-  --header 'content-type: application/json' \
-  --body '{"title":"Ship a paid API","theme":"ink"}'
+  --json-body '{"title":"Ship a paid API","theme":"ink"}'
 ```
 
 You should get the SVG plus a receipt. Deploy the paid service, then submit the live URL to the hackathon.
