@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OG Card</title>
+    <style>
+      :root { --bg:#060606; --fg:#ebebeb; --dim:#757575; --line:#ebebeb33; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-weight: 500; font-size: 28px; letter-spacing: -0.32px; }
+      p, label { color: var(--dim); }
+      form { display: grid; gap: 10px; margin: 24px 0; }
+      input, select, button { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      input, select {
+        border: 1px solid var(--line);
+        background: #101010;
+        color: var(--fg);
+        padding: 10px 12px;
+      }
+      button {
+        border: 1px solid var(--line);
+        background: #191919;
+        color: var(--fg);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        width: fit-content;
+        cursor: pointer;
+      }
+      img { width: 100%; border: 1px solid var(--line); background: #101010; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p style="font-family: ui-monospace, monospace; text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em;">Agent starter · unpaid</p>
+      <h1>OG Card</h1>
+      <p>Turn a title into a 1200×630 SVG share card. An agent can attach this to a post, a PR, or a listing. No MPP yet.</p>
+      <form id="form">
+        <label>Title <input id="title" required value="Ship a paid API" /></label>
+        <label>Subtitle <input id="subtitle" value="Agents pay over HTTP 402" /></label>
+        <label>Tag <input id="tag" value="hackathon" /></label>
+        <label>
+          Theme
+          <select id="theme">
+            <option value="ink">ink</option>
+            <option value="paper">paper</option>
+            <option value="signal">signal</option>
+          </select>
+        </label>
+        <button type="submit">Render</button>
+      </form>
+      <img id="card" alt="Generated card" src="/api/card?title=Ship%20a%20paid%20API&subtitle=Agents%20pay%20over%20HTTP%20402&tag=hackathon&theme=ink" />
+    </main>
+    <script>
+      document.getElementById("form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const body = {
+          title: document.getElementById("title").value,
+          subtitle: document.getElementById("subtitle").value,
+          tag: document.getElementById("tag").value,
+          theme: document.getElementById("theme").value,
+        };
+        const response = await fetch("/api/card", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const svg = await response.text();
+        document.getElementById("card").src = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Call Later</title>
+    <style>
+      :root { --bg:#060606; --fg:#ebebeb; --dim:#757575; --line:#ebebeb33; --ok:#98f3aa; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-weight: 500; font-size: 28px; letter-spacing: -0.32px; }
+      p, label { color: var(--dim); }
+      form { display: grid; gap: 10px; margin: 24px 0; }
+      input, textarea, button { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      input, textarea {
+        border: 1px solid var(--line);
+        background: #101010;
+        color: var(--fg);
+        padding: 10px 12px;
+        width: 100%;
+      }
+      textarea { min-height: 6rem; }
+      button {
+        border: 1px solid var(--line);
+        background: #191919;
+        color: var(--fg);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        width: fit-content;
+        cursor: pointer;
+      }
+      pre { white-space: pre-wrap; border: 1px solid var(--line); background: #101010; padding: 16px; min-height: 8rem; }
+      .ok { color: var(--ok); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p style="font-family: ui-monospace, monospace; text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em;">Agent starter · unpaid</p>
+      <h1>Call Later</h1>
+      <p>
+        An agent cannot sit in one HTTP request for five minutes. This process can.
+        You hand it JSON and a delay. When the time is up, the payload is ready —
+        or this server POSTs it to a callback URL you control.
+      </p>
+      <form id="form">
+        <label>Delay (seconds) <input id="delay" type="number" min="1" max="3600" value="8" required /></label>
+        <label>Payload JSON <textarea id="payload">{ "check": "invoice-42" }</textarea></label>
+        <label>Callback URL (optional) <input id="callback" type="url" placeholder="https://example.com/hook" /></label>
+        <button type="submit">Schedule</button>
+      </form>
+      <pre id="out">POST /api/jobs  { "delay_seconds": 8, "payload": { "check": "invoice-42" } }</pre>
+    </main>
+    <script>
+      const out = document.getElementById("out");
+      let timer = 0;
+
+      async function poll(id) {
+        const response = await fetch(`/api/jobs/${id}`);
+        const payload = await response.json();
+        out.className = payload.status === "scheduled" ? "" : "ok";
+        out.textContent = JSON.stringify(payload, null, 2);
+        if (payload.status === "scheduled") return;
+        clearInterval(timer);
+      }
+
+      document.getElementById("form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        clearInterval(timer);
+        let payload = {};
+        try {
+          payload = JSON.parse(document.getElementById("payload").value || "{}");
+        } catch {
+          out.className = "";
+          out.textContent = "Payload must be JSON";
+          return;
+        }
+        const body = {
+          delay_seconds: Number(document.getElementById("delay").value),
+          payload,
+        };
+        const callback = document.getElementById("callback").value.trim();
+        if (callback) body.callback_url = callback;
+        out.textContent = "Scheduling…";
+        const response = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const created = await response.json();
+        out.textContent = JSON.stringify(created, null, 2);
+        if (!response.ok) return;
+        timer = setInterval(() => poll(created.id), 1000);
+      });
+    </script>
+  </body>
+</html>

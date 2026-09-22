@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QR Code</title>
+    <style>
+      :root { --bg:#060606; --fg:#ebebeb; --dim:#757575; --line:#ebebeb33; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-weight: 500; font-size: 28px; letter-spacing: -0.32px; }
+      p, label { color: var(--dim); }
+      form { display: grid; gap: 10px; margin: 24px 0; }
+      textarea, button { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      textarea {
+        border: 1px solid var(--line);
+        background: #101010;
+        color: var(--fg);
+        padding: 10px 12px;
+        min-height: 6rem;
+        width: 100%;
+      }
+      button {
+        border: 1px solid var(--line);
+        background: #191919;
+        color: var(--fg);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        width: fit-content;
+        cursor: pointer;
+      }
+      .frame { width: min(320px, 100%); border: 1px solid var(--line); background: #060606; padding: 12px; }
+      .frame svg { width: 100%; height: auto; display: block; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p style="font-family: ui-monospace, monospace; text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em;">Agent starter · unpaid</p>
+      <h1>QR Code</h1>
+      <p>
+        Models can draw something that looks like a QR code. Phones reject those.
+        This encodes the string with Reed-Solomon and returns SVG you can scan.
+      </p>
+      <form id="form">
+        <label>Text <textarea id="text">WIFI:T:WPA;S:Office;P:hunter2;;</textarea></label>
+        <button type="submit">Encode</button>
+      </form>
+      <div class="frame" id="frame"></div>
+    </main>
+    <script>
+      const frame = document.getElementById("frame");
+      async function encode(text) {
+        const response = await fetch("/api/qr", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const body = await response.text();
+        frame.innerHTML = response.ok ? body : `<p>${body}</p>`;
+      }
+      document.getElementById("form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        encode(document.getElementById("text").value);
+      });
+      encode(document.getElementById("text").value);
+    </script>
+  </body>
+</html>
