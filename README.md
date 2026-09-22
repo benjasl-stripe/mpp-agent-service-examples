@@ -17,4 +17,4 @@ cd agent-service-examples/call-later
 npm start
 ```
 
-Each folder has its own README: what the service does, how to call it, and the exact steps to wrap the paid route with `mppx`.
+Each folder README has the same three sections: **Test before MPP**, **How to add MPP** (using this command, or manually step by step), then **Test after MPP**.
