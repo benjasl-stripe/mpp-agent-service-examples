@@ -45,14 +45,16 @@ Open `qr.svg` and scan it with a phone. Discovery (still unpaid): [openapi.json]
 
 Charge `GET` and `POST /api/qr`. Keep the encoder as it is.
 
+Stay on **Tempo testnet**. `testnet: true` and `--network testnet` only. Fund from the faucet. Do not take real money.
+
 ### 1. Using this command
 
 ```text
 Reference https://mpp.dev/quickstart/server.md
 
-Add mppx to this Node server so GET and POST /api/qr charge $0.01 per request using the Tempo payment method with pathUSD (testnet: true while developing).
+Add mppx to this Node server so GET and POST /api/qr charge $0.01 per request using Tempo pathUSD on testnet only (testnet: true, no mainnet, no real funds).
 Add x-payment-info.offers[] and a 402 response on /api/qr in /openapi.json. Mention the price in /llms.txt.
-Run `npx mppx validate http://127.0.0.1:4102` as you develop.
+Run `npx mppx validate http://127.0.0.1:4102 --network testnet` as you develop.
 ```
 
 ### 2. Manually, step by step
@@ -80,7 +82,7 @@ Run `npx mppx validate http://127.0.0.1:4102` as you develop.
        tempo.charge({
          currency: process.env.TEMPO_CURRENCY, // pathUSD — see mpp.dev/quickstart/server.md
          recipient: process.env.TEMPO_RECIPIENT,
-         testnet: true,
+         testnet: true, // required — faucet pathUSD, not live funds
        }),
      ],
      secretKey: process.env.MPP_SECRET_KEY,
@@ -97,7 +99,7 @@ Docs: [Server quickstart](https://mpp.dev/quickstart/server.md) · [Discovery](h
 
 ## Test after MPP
 
-An unpaid render must now return **402**, not the SVG:
+Still testnet. An unpaid render must now return **402**, not the SVG:
 
 ```bash
 curl -i http://127.0.0.1:4102/api/qr \
@@ -108,7 +110,7 @@ curl -i http://127.0.0.1:4102/api/qr \
 Then run the official checker and a paid request:
 
 ```bash
-npx mppx validate http://127.0.0.1:4102
+npx mppx validate http://127.0.0.1:4102 --network testnet
 npx mppx account create --network testnet
 npx mppx account fund --network testnet
 npx mppx http://127.0.0.1:4102/api/qr \

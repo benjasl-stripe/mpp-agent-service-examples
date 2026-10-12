@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Invite</title>
+    <style>
+      :root { --bg:#060606; --fg:#ebebeb; --dim:#757575; --line:#ebebeb33; }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.4 ui-sans-serif, system-ui, sans-serif; }
+      main { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; }
+      h1 { font-weight: 500; font-size: 28px; letter-spacing: -0.32px; }
+      p, label { color: var(--dim); }
+      form { display: grid; gap: 10px; margin: 24px 0; }
+      input, button, a.button { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+      input {
+        border: 1px solid var(--line);
+        background: #101010;
+        color: var(--fg);
+        padding: 10px 12px;
+        width: 100%;
+      }
+      .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+      button, a.button {
+        border: 1px solid var(--line);
+        background: #191919;
+        color: var(--fg);
+        padding: 10px 14px;
+        text-transform: uppercase;
+        width: fit-content;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      pre { white-space: pre-wrap; border: 1px solid var(--line); background: #101010; padding: 16px; min-height: 8rem; }
+      #when { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg); min-height: 1.4em; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p style="font-family: ui-monospace, monospace; text-transform: uppercase; font-size: 13px; letter-spacing: 0.08em;">Agent starter · unpaid</p>
+      <h1>Invite</h1>
+      <p>
+        An agent can name a time. This writes an <code>.ics</code> file with the timezone,
+        line folding, and event id done correctly. Download it and open it in Calendar.
+      </p>
+      <form id="form">
+        <label>Title <input id="title" required value="Ship review" /></label>
+        <label>Start <input id="start" type="datetime-local" required value="2026-10-15T15:00" /></label>
+        <label>Timezone <input id="timezone" required value="Europe/London" spellcheck="false" /></label>
+        <label>Duration (minutes) <input id="duration" type="number" min="5" max="1440" value="30" required /></label>
+        <label>Location <input id="location" value="Room 4" /></label>
+        <label>Description <input id="description" value="Walk through the paid API." /></label>
+        <div class="row">
+          <button type="submit">Build invite</button>
+          <a id="download" class="button" hidden download="invite.ics">Download invite.ics</a>
+        </div>
+      </form>
+      <p id="when"></p>
+      <pre id="out"></pre>
+    </main>
+    <script>
+      const out = document.getElementById("out");
+      const when = document.getElementById("when");
+      const download = document.getElementById("download");
+      let fileUrl = "";
+
+      function utcLabel(stamp) {
+        const match = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/.exec(stamp);
+        if (!match) return stamp;
+        return `${match[1]}-${match[2]}-${match[3]} ${match[4]}:${match[5]} UTC`;
+      }
+
+      function fields() {
+        return {
+          title: document.getElementById("title").value,
+          start: document.getElementById("start").value,
+          timezone: document.getElementById("timezone").value,
+          duration_minutes: Number(document.getElementById("duration").value),
+          location: document.getElementById("location").value,
+          description: document.getElementById("description").value,
+        };
+      }
+
+      async function build(body) {
+        const response = await fetch("/api/invite", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const text = await response.text();
+        if (!response.ok) {
+          when.textContent = "";
+          download.hidden = true;
+          out.textContent = text;
+          return;
+        }
+        const start = text.match(/DTSTART:(\d{8}T\d{6}Z)/);
+        const end = text.match(/DTEND:(\d{8}T\d{6}Z)/);
+        when.textContent =
+          start && end ? `${body.start} ${body.timezone} → ${utcLabel(start[1])} to ${utcLabel(end[1])}` : "";
+        out.textContent = text;
+        if (fileUrl) URL.revokeObjectURL(fileUrl);
+        fileUrl = URL.createObjectURL(new Blob([text], { type: "text/calendar" }));
+        download.href = fileUrl;
+        download.hidden = false;
+      }
+
+      document.getElementById("form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        build(fields());
+      });
+      build(fields());
+    </script>
+  </body>
+</html>
